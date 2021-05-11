@@ -4,8 +4,8 @@ from q import Q,parse
 matrix = []
 sideLen=eval(input("side length="))
 accu=0
-ANIMATION = False
-DT = 0.4
+ANIMATION = True
+DT = 0
 
 # up
 row_rules = []

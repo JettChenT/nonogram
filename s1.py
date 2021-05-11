@@ -1,10 +1,12 @@
 from pprint import pprint
 import time
+import random
 matrix = []
 sideLen=eval(input("side length="))
 accu=0
 ANIMATION = False
-DT = 0.2
+jmp = False
+DT = 0.1
 
 # up
 row_rules = []
@@ -31,10 +33,7 @@ for i in range(sideLen):
 		matrix[i].append(0)
 
 def get_row(n):
-	res = []
-	for lst in matrix:
-		res.append(lst[n])
-	return res
+	return [lst[n] for lst in matrix]
 	
 def cnt(lst):
 	cst = False
@@ -61,12 +60,7 @@ def next_cord(i,j):
 
 def status(i,j):
 	if j==sideLen-1:
-		if i==j:
-			# At the ultimate end
-			return 1
-		# At end of the row
-		return 2
-	# Normal mode
+		return 2-(i==j)
 	return 3
 
 def validate(i,j):
@@ -74,10 +68,16 @@ def validate(i,j):
 	if solved:
 		return True
 	s = status(i,j)
-	# print(f"case {s}")
+	cr = cnt(get_row(j))
+	if len(cr)>len(row_rules[j]):
+		return False
+	flag = True
+	for k in range(min(len(cr),len(row_rules[j]))):
+		flag = flag and (cr[k]<=row_rules[j][k])
+	if flag==False:
+		return False
 	if s==2:
 		cnts = cnt(matrix[i])
-		# print(cnts,col_rules[i])
 		return cnts == col_rules[i]
 	if s==1:
 		flag = True
@@ -88,8 +88,11 @@ def validate(i,j):
 			solved = True
 		return flag
 	cnts = cnt(matrix[i])
-	# print(cnts,col_rules[i])
 	if len(cnts)>len(col_rules[i]):
+		return False
+	if cnts==col_rules[i]:
+		global jmp
+		jmp = True
 		return False
 	if len(cnts)==len(col_rules[i]):
 		flag = True
@@ -97,23 +100,30 @@ def validate(i,j):
 			flag = flag and (cnts[j]<=col_rules[i][j])
 		return flag
 	return cnts[-1]<=col_rules[i][len(cnts)-1]
+	
+def check_row(r):
+	return cnt(matrix[r]) == col_rules[r]
 
 def bt(i,j):
 	global accu
 	accu+=1
 	global matrix
-	if ANIMATION:
-		print(validate(i,j))
-		print(i,j)
-		pprint(matrix)
-		time.sleep(DT)
-	if not validate(i, j):
-		return False
-	if solved:
-		return True
-	ni,nj = next_cord(i, j)
-	if ni==nj==-1:
-		return validate(i, j)
+	v = validate(i, j)
+	global jmp
+	if jmp:
+		jmp = False
+		if i==sideLen-1:
+			return True
+		ni,nj = i+1,0
+	else:
+		if not v:
+			return False
+		if solved:
+			return True
+	
+		ni,nj = next_cord(i, j)
+		if ni==nj==-1:
+			return v
 	matrix[ni][nj] = 1
 	ans_a = bt(ni,nj)
 	if ans_a:
@@ -128,27 +138,23 @@ def main():
 	global matrix
 	matrix[0][0] = 1
 	if bt(0,0):
-		print("SOLVED!")
-		pprint(matrix)
+		# print("SOLVED!")
+		# pprint(matrix)
+		return
 	else:
 		matrix[0][0] = 0
 		if bt(0,0):
-			print("SOLVED!")
-			pprint(matrix)
+			# print("SOLVED!")
+			# pprint(matrix)
+			return
 		else:
 			print("No solution!")
-	
+			return
 	print(accu)
+	
 
 ti = time.time()
 main()
 tt = time.time()-ti
-print(f"total time taken:{tt} seconds")
-# matrix = [[1, 0, 1, 0, 1, 0],
-#  [1, 1, 0, 0, 0, 0],
-#  [0, 0, 0, 0, 0, 0],
-#  [0, 0, 0, 0, 0, 0],
-#  [0, 0, 0, 0, 0, 0],
-#  [0, 0, 0, 0, 0, 0]]
-# 
-# pprint(validate(1,0))
+pprint(matrix)
+print(f"time taken:{tt} seconds")
